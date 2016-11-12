@@ -4,5 +4,5 @@ class(estantes,[[id=>e1,[categoria=>bebida]],[id=>e2,[categoria=>comida]],[id=>e
 class(productos,[ubicacion=>almacen],[[id=>rollo, categoria=>pan],[id=>fideos, categoria=>comida],[id=>kellogs, categoria=>comida],[id=>frutsi,categoria=>bebida],[id=>cerveza, consumo=>"mayor de 18 anios ", categoria=>bebida ],[id=>coca, categoria=>bebida],[id=>maruchan, categoria=>comida],[id=>gansito, categoria=>pan]]),
 class(creencias,[e1=>[cerveza,coca],e2=>[maruchan],e3=>[gansito]]),
 class(robot,posicion=>P.I,[mano_derecha=>libre, mano_izquierda=>libre, tareas=>[]]),
-class(observacion,[e1=>[cerveza,maruchan,frutsi],e2=>[fideos],e3=>[rollo]])
+class(observacion,[e1=>[cerveza,maruchan,frutsi],e2=>[fideos],e3=>[]])
 ]

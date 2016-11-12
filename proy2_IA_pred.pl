@@ -208,3 +208,79 @@ validar_creencias([X=>Y|Xs],[Z=>W|Zs],[X=>F|Fs]):-
 	%write(F),nl,
 	validar_creencias(Xs,Zs,Fs)
 	.
+
+tamanio_estante([],[]).
+tamanio_estante([Estante=>Lproductos|Rproductos],[Tamlistaprod|Rtam]):-
+	length(Lproductos,Tamlistaprod),
+	tamanio_estante(Rproductos,Rtam).
+
+total_deproductos(Tamanioestante,Totaldeproductos):-
+	sum_list(Tamanioestante,Totaldeproductos)
+	.
+
+
+tamanio_porestante(Tamanioestante,Totaldeproductos):-
+	unificar_kb(X),
+	encontrar_creencias(X,Creencias),
+	tamanio_estante(Creencias,Tamanioestante),
+	total_deproductos(Tamanioestante,Totaldeproductos).
+	%write(Tamanioestante),
+	%write(Totaldeproductos)
+	
+
+tamanio_porestante_obs(TamanioestanteObservacion,TotaldeproductosObservacion):-
+	unificar_kb(X),
+	encontrar_observaciones(X,Observaciones),
+	%write(Observaciones),nl,
+	tamanio_estante(Observaciones,TamanioestanteObservacion),
+	total_deproductos(TamanioestanteObservacion,TotaldeproductosObservacion)
+	.
+
+calcular_diferencias_creencias([],[],L).
+calcular_diferencias_creencias([H|T],[R|S],[Diferencia|RestoDiferencia]):-
+	H=Estante=>[Correctos,Sobrantes,Faltantes],
+	R=Estante=>[CorrectosActualizados,SobrantesActualizados,FaltantesActualizados],
+	length(CorrectosActualizados,T1),
+	length(Correctos,T2),
+	Diferencia is T1-T2,
+	calcular_diferencias_creencias(T,S,RestoDiferencia).
+	
+
+numero_deproductosnoreportados(Total):-
+	creencias_observaciones(I,R),	
+	calcular_diferencias_creencias(I,R,L),
+	sum_list(L,Total).
+
+estantes_observados2([],[]).	
+estantes_observados2([Estante=>L|Restante],S):-
+	write(L),nl,
+	L=[]-> 
+	estantes_observados2(Restante,[Estante|S]).
+
+
+estantes_observados():-
+	unificar_kb(KB),
+	encontrar_observaciones(KB,R),
+	estantes_observados2(R,Rest),
+	write(R),
+	write(Rest)
+	.
+
+
+arbol_deseado():-
+	tamanio_porestante(Tamanioestante,Totaldeproductos),
+	numero_deproductosnoreportados(TotalNoReportados),
+	ProductosTotales is Totaldeproductos+TotalNoReportados,
+	tamanio_porestante_obs(TamanioestanteObservacion,TotaldeproductosObservacion),
+	ProductosTotalesRepartir is ProductosTotales - TotaldeproductosObservacion,
+	write(ProductosTotalesRepartir),
+	estantes_observados()
+	.
+
+filter([],[]).
+filter([H|T],S) :-
+  H<0,
+  filter(T,S).
+filter([H|T],S) :-
+  H>=0,
+  filter(T,[H|S]).
