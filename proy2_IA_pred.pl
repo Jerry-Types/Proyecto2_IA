@@ -37,8 +37,6 @@ atom_to_term(ATOM, TERM) :-
 
 guardar_variable(X):-
 	open_kb('/home/nemis/proyecto2_IA/proyecto2_IA.txt',X).
-	%write('KB: '),
-	%write(KB),
 	%save_kb('/home/nemis/proyecto2_IA/proyecto2_IA.txt',KB).
 
 unificar_kb(X):-open_kb('/home/nemis/proyecto2_IA/proyecto2_IA.txt',X).
@@ -57,8 +55,6 @@ valor(X,[(Y=>_)|T],R) :- not(X=Y),valor(X,T,R).
 encontrar_observaciones([],_).
 encontrar_observaciones([H|T],R):-
 	H=..Lista,
-	%write(Lista),nl,
-	%write(T),nl,
 	Lista=[class,observacion,EstantesObservacion]->R=EstantesObservacion,!;
 	encontrar_observaciones(T,R).
 
@@ -66,16 +62,11 @@ encontrar_observaciones([H|T],R):-
 encontrar_creencias([],_).
 encontrar_creencias([H|T],R):-
 	H=..Lista,
-	%write(Lista),nl,
-	%write(Lista),nl,
 	Lista=[class,creencias,EstantesCreencia]->R=EstantesCreencia,!;
 	encontrar_creencias(T,R).
 
 encontrar_estantes2([],[]).
 encontrar_estantes2([H|T],[Estante=>ValorCategoria|REstante]):-
-	%write(H),nl,
-	%write("El valor H es el siguiente"),nl,
-	%write(H),nl,
 	H=[Id=>Estante,[Categoria=>ValorCategoria]],
 	encontrar_estantes2(T,REstante)
 	.
@@ -85,9 +76,7 @@ encontrar_estantes2([H|T],[Estante=>ValorCategoria|REstante]):-
 encontrar_estantes1([],_).
 encontrar_estantes1([H|T],R):-
 	H=..Lista,
-	%write(Lista),nl,
 	Lista=[class,estantes,Estantes]->R=Estantes,!;
-	%write(Lista),nl,
 	encontrar_estantes1(T,R)
 	.
 
@@ -102,9 +91,6 @@ encontrar_estantes(EstantesConCategoria):-
 %Predicado ecnontrar categoria de producto de una lista de listas%
 encontrar_categoria_listal([],Producto,R).
 encontrar_categoria_listal([H|T],Producto,R):-
-	%write("El producto es"),nl,
-	%write(Producto),nl,nl,
-	%write(H),
 	H=[Id=>Product,Categoria=>Valor|Rp],
 	Product=Producto -> R=Product=>Valor;
 	encontrar_categoria_listal(T,Producto,R).
@@ -114,9 +100,6 @@ encontrar_categoria_listal([H|T],Producto,R):-
 %Predicado ecnontrar estante de producto de una lista de listas%
 encontrar_categoria_estantel([],Producto,R).
 encontrar_categoria_estantel([H|T],Producto,R):-
-	%write("El producto es"),nl,
-	%write(Producto),nl,nl,
-	%write(H),
 	H=[Id=>Product,Categoria=>Valor|Rp],
 	Product=Producto -> R=Product=>Valor;
 	encontrar_categoria_estantel(T,Producto,R).
@@ -126,75 +109,43 @@ encontrar_categoria_estantel([H|T],Producto,R):-
 encontrar_productos([],_).
 encontrar_productos([H|T],R):-
 	H=..Lista,
-	%write(Lista),nl,
 	Lista=[class,productos,[_],Productos],R=Productos;
 	encontrar_productos(T,R)
 	.
 %Predicado lista productos con estantes%
 asociar_producto_estante([],S,R,[]).
 asociar_producto_estante([H|T],S,R,[Lp|Lps]):-
-	%write("Asosciar Producto"),nl,
-	encontrar_categoria_estantel(S,H,R),R=Lp,nl,
+	encontrar_categoria_estantel(S,H,R),R=Lp,
 	asociar_producto_estante(T,S,Rs,Lps).
 
 
 %Predicado lista productos con categoria%
 asociar_producto_categoria([],S,R,[]).
 asociar_producto_categoria([H|T],S,R,[Lp|Lps]):-
-	%write("Asosciar Producto"),nl,
-	encontrar_categoria_listal(S,H,R),R=Lp,nl,
+	encontrar_categoria_listal(S,H,R),R=Lp,
 	asociar_producto_categoria(T,S,Rs,Lps).
 
 encontrar_match_categorias2(Excategoria,[],El,[],[]).
 encontrar_match_categorias2(Excategoria,[Prod=>Cat|T],El,[Prod|L1],L2):-
-	%write("encontrar_match_categorias2"),nl,
-	%write(Prod),nl,
-	%write(Cat),nl,
 	Excategoria=Cat->!,encontrar_match_categorias2(Excategoria,T,El,L1,L2).
 
 encontrar_match_categorias2(Excategoria,[Prod=>Cat|T],El,L1,[Prod|L2]):-
 	encontrar_match_categorias2(Excategoria,T,El,L1,L2).	
 
 encontrar_match_categorias(Excategoria,[Estante=>Prod],El,Elmodificado):-
-	%write("encontrar_match_categorias"),nl,
-	%write(Excategoria),nl,
-	%write(Estante),nl,
-	%write(Prod),nl,
-	%write(El),nl,
-	%write(Elmodificado),
 	encontrar_match_categorias2(Excategoria,Prod,El,Lcorrectos,Lsobrantes),
-	%write("LAs Ls"),nl,
-	%write(Lcorrectos),nl,
-	%write(Lsobrantes),nl,
 	El=[Correctos,Sobrantes,Faltantes],
-	%write("Los correctos son los siguientes:"),nl,
-	%write(Correctos),
 	union(Correctos,Lcorrectos,Lcorrectosmod),
-	%write("Los sobrantes son los siguiente:"),nl,
-	%write(Sobrantes),nl,
-	%write("Los faltantes son los siguientes"),nl,
-	%write(Faltantes),
 	Elmodificado=[Lcorrectosmod,Lsobrantes,Faltantes].
-	%write("El valor de Elmodificado es el siguiente:"),nl,
-	%write(Elmodificado).
+	.
 
 actualizar_creencias_observaciones([],KB,[],[]).
 actualizar_creencias_observaciones([Ex=>El|Er],KB,[Ex=>Excategoria|Exr],[Ex=>Elmodificado|Elmodificador]):-
 	%encontrar_estantes(KB,T),
-	%write("La categoria"),write(Excategoria),nl,
-	%write("Soy Exr"),write(Exr),nl,
-	%write("Soy Er"),write(Exr),nl,	
-	%write(T),nl,nl,
 	encontrar_productos(KB,S),
-	%write(S),nl,nl,
 	El=[_,Sobrantes,_],
-	%write(Sobrantes),nl,nl,
 	asociar_producto_categoria(Sobrantes,S,R,R2),
-	%write("Sale R2"),nl,
-	%write(R2),nl,
 	Relacion_Estante_Sobrantes=Ex=>R2,
-	%write(Relacion_Estante_Sobrantes),nl,
-	%write(Er),nl,nl,nl,
 	encontrar_match_categorias(Excategoria,[Relacion_Estante_Sobrantes],El,Elmodificado),
 	actualizar_creencias_observaciones(Er,KB,Exr,Elmodificador).
 
@@ -203,19 +154,11 @@ actualizar_creencias_observaciones([Ex=>El|Er],KB,[Ex=>Excategoria|Exr],[Ex=>Elm
 creencias_observaciones(I,R):-
 	unificar_kb(KB),
 	%convertir_lista(KB,L),
-	%write(KB),nl,nl,
 	encontrar_observaciones(KB,R_observaciones),
 	encontrar_creencias(KB,R_creencias),
-	%write(R_observaciones),nl,
-	%write(R_creencias),
 	validar_creencias(R_observaciones,R_creencias,I),
-	%write("El valor de validar creencias es el siguiente"),nl,
-	%write(I),
 	encontrar_estantes(Estantes),
-	%write("Los estantes son:"),write(Estantes),nl,
 	actualizar_creencias_observaciones(I,KB,Estantes,Rfinal),
-	%write("El resultado final es el siguiente"),nl,
-	%write(Rfinal)
 	R=Rfinal
 	.
 
@@ -238,12 +181,7 @@ validar_creencias2(Obs,Creen,In,R,T,F):-
 
 validar_creencias([],[],[]).
 validar_creencias([X=>Y|Xs],[Z=>W|Zs],[X=>F|Fs]):-
-	%write(X),nl,nl,
-	%write(Z),
 	validar_creencias2(Y,W,RI,R,S,F),
-	%write(R),nl,
-	%write(S),nl,
-	%write(F),nl,
 	validar_creencias(Xs,Zs,Fs)
 	.
 
@@ -262,14 +200,11 @@ tamanio_porestante(Tamanioestante,Totaldeproductos):-
 	encontrar_creencias(X,Creencias),
 	tamanio_estante(Creencias,Tamanioestante),
 	total_deproductos(Tamanioestante,Totaldeproductos).
-	%write(Tamanioestante),
-	%write(Totaldeproductos)
 	
 
 tamanio_porestante_obs(TamanioestanteObservacion,TotaldeproductosObservacion):-
 	unificar_kb(X),
 	encontrar_observaciones(X,Observaciones),
-	%write(Observaciones),nl,
 	tamanio_estante(Observaciones,TamanioestanteObservacion),
 	total_deproductos(TamanioestanteObservacion,TotaldeproductosObservacion)
 	.
@@ -323,51 +258,51 @@ articulos_a_permutar(ArticulosAPermutar):-
 
 permutar_objetos2(ArticulosAPermutar,[]).
 permutar_objetos2(ArticulosAPermutar,[DEstante|DRestante]):-
-	write("Permutar Objetos 2"),nl,
-	write(DEstante),nl,
+	write("Permutar Objetos 2"),
+	write(DEstante),
 	setof(Conjunto,subset(DEstante,ArticulosAPermutar,Conjunto),L),
-	write(L),nl,
+	write(L),
 	permutar_objetos3(ArticulosAPermutar,L,DRestante).
 	
 
 permutar_objetos4(ArticulosAPermutar,[],[]).
 permutar_objetos4(ArticulosAPermutar,[PrimerElement|RestElement],[DEstante|DRestante]):-
-	write("Entre aqui objetos 4"),nl,
-	write(ArticulosAPermutar),nl,
-	write(PrimerElement),nl,
-	write(DEstante),nl,
+	write("Entre aqui objetos 4"),
+	write(ArticulosAPermutar),
+	write(PrimerElement),
+	write(DEstante),
 	subtract(ArticulosAPermutar,PrimerElement,ArticulosAPermutar3),
-	write(ArticulosAPermutar3),nl,
+	write(ArticulosAPermutar3),
 	setof(Conjunto,subset(DEstante,ArticulosAPermutar3,Conjunto),L),
-	write(L).
+	write(L)
+	.
 	%permutar_objetos4(ArticulosAPermutar3,RestElement,DRestante).
 	
 
 permutar_objetos3(ArticulosAPermutar,[],[]).
 permutar_objetos3(ArticulosAPermutar,[PrimerElement|RestElement],[DEstante|DRestante]):-
-	write("Entre aqui"),nl,
-	write(ArticulosAPermutar),nl,
-	write(PrimerElement),nl,
-	write(DEstante),nl,
+	write("Entre aqui"),
+	write(ArticulosAPermutar),
+	write(PrimerElement),
+	write(DEstante),
 	subtract(ArticulosAPermutar,PrimerElement,ArticulosAPermutar2),
-	write(ArticulosAPermutar2),nl,
+	write(ArticulosAPermutar2),
 	setof(Conjunto,subset(DEstante,ArticulosAPermutar2,Conjunto),L),
 	write(L),nl.
 	%permutar_objetos3(ArticulosAPermutar,RestElement,DEstante).
 	%permutar_objetos4(ArticulosAPermutar2,L,DRestante).
 	
-	%
-	%write(L),fail
+	
 calcular_peso_configuracion2(PrimerElement,[]).
 calcular_peso_configuracion2(PrimerElement,[Posibles|Rposibles]):-
-	write("Una de las configuraciones es la siguiente"),nl,
-	write(PrimerElement),write(Posibles),nl,nl,
+	write("Una de las configuraciones es la siguiente"),
+	write(PrimerElement),write(Posibles),
 	calcular_peso_configuracion2(PrimerElement,Rposibles).
 
 calcular_peso_configuracion(PrimerElement,SegundoElemnt):-
-	write("Debo calcular el peso de las siguientes configuraciones"),nl,
-	write(PrimerElement),nl,
-	write(SegundoElemnt),nl,
+	write("Debo calcular el peso de las siguientes configuraciones"),
+	write(PrimerElement),
+	write(SegundoElemnt),
 	calcular_peso_configuracion2(PrimerElement,SegundoElemnt)
 	.
 
@@ -376,46 +311,34 @@ calcular_peso_configuracion(PrimerElement,SegundoElemnt):-
 
 permutar_productos3([],ArticulosAPermutar,DRestante).
 
-permutar_productos3([PrimerElement|RestElement],ArticulosAPermutar,[]):-
-	write("Solo hay permutaciones de productos en un estante elementos").
 
 permutar_productos3([PrimerElement|RestElement],ArticulosAPermutar,DRestante):-
-	write("Permutar productos 3"),nl,
-	%write(PrimerElement),nl,
+	write("Permutar productos 3"),
 	subtract(ArticulosAPermutar,PrimerElement,ArticulosAPermutar2),
-	%write(ArticulosAPermutar2),nl,
 	DRestante=[ValorRestante],
-	%write(ValorRestante),nl,
 	setof(Conjunto,subset(ValorRestante,ArticulosAPermutar2,Conjunto),L),
-	%write(L),nl,
 	calcular_peso_configuracion(PrimerElement,L),
 	permutar_productos3(RestElement,ArticulosAPermutar,DRestante).
 
 	
 permutar_productos2([],ArticulosAPermutar).
 permutar_productos2([DEstante|DRestante],ArticulosAPermutar):-
-	write("Permutar productos 2"),nl,
-	write(DEstante),nl,
+	write("Permutar productos 2"),
+	write(DEstante),
 	setof(Conjunto,subset(DEstante,ArticulosAPermutar,Conjunto),L),
-	write(L),nl,
+	write(L),
 	write(DRestante),
 	permutar_productos3(L,ArticulosAPermutar,DRestante),
 	permutar_productos2(DRestante,ArticulosAPermutar).
 
 permutar_productos(ArticulosAPermutar,PDistribucion):-
-	%write("Los productos los voy a distribuir de la siguiente manera:"),
-	%write(PDistribucion),nl,
-	%write("Los elementos que voy a permutar son los siguientes:"),
-	%write(ArticulosAPermutar),
-	%,nl,
+	%,
 	permutar_productos2(PDistribucion,ArticulosAPermutar).
 
 
 
 permutar_objetos(ArticulosAPermutar,[]).
 permutar_objetos(ArticulosAPermutar,[PDistribucion|RDsitribucion]):-
-	nl,nl,
-	%write(PDistribucion),nl,
 	%permutar_objetos2(ArticulosAPermutar,PDistribucion),
 	permutar_productos(ArticulosAPermutar,PDistribucion),
 	permutar_objetos(ArticulosAPermutar,RDsitribucion).
@@ -449,8 +372,6 @@ separar_productos_a_permutar([ArticuloCategoria|RArticuloCategoria],EstantesNoOb
 substraer_elementos_correctos3([],EstanteNoObservado,ElementoDistribucion,[]).
 substraer_elementos_correctos3(X,EstanteNoObservado,0,[]).
 substraer_elementos_correctos3([ProductoCorrecto|RProductoCorrecto],EstanteNoObservado,ElementoDistribucion,L):-
-	%write("Inicia el proceso de extraccion"),nl,
-	%write(ProductoCorrecto),nl,
 	ProductoCorrecto=Producto=>IdEstante,
 	not(IdEstante=EstanteNoObservado)->!,substraer_elementos_correctos3(RProductoCorrecto,EstanteNoObservado,ElementoDistribucion,L).
 
@@ -460,10 +381,6 @@ substraer_elementos_correctos3([ProductoCorrecto|RProductoCorrecto],EstanteNoObs
 
 substraer_elementos_correctos2(ProductosColocarCorrectos,[],[],[]).
 substraer_elementos_correctos2(ProductosColocarCorrectos,[EstanteNoObservado|REstanteNoObservado],[ElementoDistribucion|RElementoDistribucion],[Valor|Rvalor]):-
-	%write("Inicia el segundo proceso"),nl,
-	%write(ProductosColocarCorrectos),nl,
-	%write(EstanteNoObservado),nl,
-	%write(ElementoDistribucion),nl,
 	substraer_elementos_correctos3(ProductosColocarCorrectos,EstanteNoObservado,ElementoDistribucion,Valor),
 	substraer_elementos_correctos2(ProductosColocarCorrectos,REstanteNoObservado,RElementoDistribucion,Rvalor)
 	.
@@ -513,50 +430,22 @@ construir_configuracion_de_estantes([H|T],[],[L2|L2s]):-
 
 construir_configuracion_de_estantes([H|T],[Z|W],[L2|L2s]):-
 	H=IdEstante=>L,
-	%write(H),nl,
-	%write(Z),nl,
-	%write(IdEstante),nl,
 	not(L=[])->(L2=L,construir_configuracion_de_estantes(T,[Z|W],L2s));
 	L2=Z,construir_configuracion_de_estantes(T,W,L2s).
 
 substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrectos,EstantesNoObservados,[],ArticulosConEstantes,[]).
 substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrectos,EstantesNoObservados,[PosibleDistribucion|RPosibleDistribucion],ArticulosConEstantes,[ConfiguracionEstantesFinal|R]):-
-	%write("Inicia para extrar colocacion de objetos correctos"),nl,
-	%write(ProductosColocarCorrectos),nl,
-	%write(EstantesNoObservados),nl,
-	%write(PosibleDistribucion),nl,
 	substraer_elementos_correctos2(ProductosColocarCorrectos,EstantesNoObservados,PosibleDistribucion,PoisbleConfiguracionOrdenados),
-	%write("Posibles configuraciones para posibles ordenados"),nl,
-	%write(PoisbleConfiguracionOrdenados),nl,
 	flatten(PoisbleConfiguracionOrdenados,PoisbleConfiguracionOrdenadosLista),
-	%write("La lista unificada es la siguiente"),nl,nl,
-	%write(PoisbleConfiguracionOrdenadosLista),nl,nl,
-	%write("Tengo que quita a :"),nl,
-	%write(ArticulosConEstantes),
-	%write("LA RESTA ES LA SIGUIENTE"),nl,nl,
 	subtract(ArticulosConEstantes,PoisbleConfiguracionOrdenadosLista,PoisbleConfiguracionNoOrdenados),
-	%write(PoisbleConfiguracionNoOrdenados),nl,
 	tamanio_configuracionordenados(PoisbleConfiguracionOrdenados,ResultadoTamanio),
-	%write("El resultado de Tamanio es el siguiente"),nl,
-	%write(ResultadoTamanio),nl,
 	actualizar_distribucion_estantes(PosibleDistribucion,ResultadoTamanio,DistribucionActualizada),
-	%write("La distribucion actualizada es la siguiente:"),nl,
-	%write(DistribucionActualizada),nl,
-	llenado_restantes(DistribucionActualizada,PoisbleConfiguracionNoOrdenados,AcomodosRestantes),nl,
-	%write("Los acomods restantes son los siguientes"),nl,
-	%write(AcomodosRestantes),nl,
+	llenado_restantes(DistribucionActualizada,PoisbleConfiguracionNoOrdenados,AcomodosRestantes),
 	unificar_acomodos(PoisbleConfiguracionOrdenados,AcomodosRestantes,AcomodosUnificados),
-	%write("Por fin la lista UNIFICADA:::"),nl,
-	%write(AcomodosUnificados),nl,
-	regresar_productos_sinestantes(AcomodosUnificados,AcomodosUnificadosFinal),nl,
-	%write("Estantes para match"),nl,nl,
-	%write(AcomodosUnificadosFinal),
+	regresar_productos_sinestantes(AcomodosUnificados,AcomodosUnificadosFinal),
 	unificar_kb(KB),
 	encontrar_observaciones(KB,Observaciones),
-	%write(Observaciones),nl,
 	construir_configuracion_de_estantes(Observaciones,AcomodosUnificadosFinal,ConfiguracionEstantesFinal),
-	%write("La configuracion de estantes final es :"),nl,
-	%write(ConfiguracionEstantesFinal),nl,
 	substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrectos,EstantesNoObservados,RPosibleDistribucion,ArticulosConEstantes,R).
 
 obetener_creencias_cantidad_estante_auxiliar([],[]).
@@ -600,28 +489,13 @@ obtener_pconfiguracion_sin_creencias([Estante|REstante],[EstanteCreencias|REstan
 
 calcular_peso_configuraciones([],[],[]).
 calcular_peso_configuraciones([Configuracion|RestoConfiguraciones],[Configuracion|RConfiguracion],[PesoFinalConfiguracion|RPesoFinalConfiguracion]):-
-	%write("Voy a iniciar con el calculo del peos las configuraciones"),nl,
-	%write(Configuracion),nl,
-	%write("La cantidad por estantes de las creencias es el siguiente"),nl,
 	obetener_creencias_cantidad_estante(TamanioCreenciasPorEstante),
-	%write(TamanioCreenciasPorEstante),nl,
-	%write("El tamaño de la primer configuracion es el siguiente:"),nl,
-	obtener_cantidad_estante_pconfiguracion(Configuracion,TamanioCinfiguracionPorEstante),nl,
-	%write(TamanioCinfiguracionPorEstante),nl,
-	%write("La diferencia es la siguiente"),nl,
-	obtener_diferencies_creencias_pconfigruacion(TamanioCreenciasPorEstante,TamanioCinfiguracionPorEstante,DiferenciasPorEstante),nl,
-	%write(DiferenciasPorEstante),
-	%write("El valor de la suma de diferencias por estante es el siguiente"),nl,
+	obtener_cantidad_estante_pconfiguracion(Configuracion,TamanioCinfiguracionPorEstante),
+	obtener_diferencies_creencias_pconfigruacion(TamanioCreenciasPorEstante,TamanioCinfiguracionPorEstante,DiferenciasPorEstante),
 	sum_list(DiferenciasPorEstante,SumadiferenciasPorEstante),%Valor importante a considerar
-	%write(SumadiferenciasPorEstante),nl,
 	obtener_pconfiguracion_sin_creencias_aux(LProductosCreencias),
-	%write("obtener_pconfiguracion_sin_creencias_aux"),nl,
-	%write(LProductosCreencias),nl,
 	obtener_pconfiguracion_sin_creencias(Configuracion,LProductosCreencias,TEstante),
-	%write(TEstante),%Valor importante a considerar
 	sum_list(TEstante,SumaTEstante),
-	%write(SumaTEstante),nl,
-	%write("El valor de la funcion final es el siguiente"),nl,
 	PesoFinalConfiguracion is SumadiferenciasPorEstante+SumaTEstante,
 	calcular_peso_configuraciones(RestoConfiguraciones,RConfiguracion,RPesoFinalConfiguracion).
 
@@ -638,7 +512,7 @@ reportar_acciones_productos([H|T]):-
 decripcion_acciones_asistente([],Estante).
 decripcion_acciones_asistente([H|T],Estante):-
 	H=[]->Estante2 is Estante+1,decripcion_acciones_asistente(T,Estante2);
-	write("El asistente se movio al estante"),write(" :"),write(Estante),
+	write("====El asistente se movio al estante===="),write(" :"),write(Estante),nl,
 	reportar_acciones_productos(H),Estante2 is Estante+1,
 	decripcion_acciones_asistente(T,Estante2).
 
@@ -648,33 +522,18 @@ diagnostico(RConfiguracion):-
 	ProductosTotales is Totaldeproductos+TotalNoReportados,
 	tamanio_porestante_obs(TamanioestanteObservacion,TotaldeproductosObservacion),
 	ProductosTotalesRepartir is ProductosTotales - TotaldeproductosObservacion,
-	%write(ProductosTotalesRepartir),nl,
 	estantes_noobservados(EstantesNoObservados),
-	%write(EstantesNoObservados),nl,
 	articulos_a_permutar(ArticulosAPermutar),
-	%write(ArticulosAPermutar),nl,
 	distribucion_por_estante(ArticulosAPermutar,EstantesNoObservados,ListaFinalDistribucion),
-	%write(ListaFinalDistribucion),nl,
 	unificar_kb(KB),
 	encontrar_productos(KB,S),
 	asociar_producto_estante(ArticulosAPermutar,S,R,ProductosAPermutarCategoria),
-	%write(ProductosAPermutarCategoria),
 	encontrar_estantes(EstantesEncontradosCategoria),
-	%write(EstantesEncontradosCategoria),nl,
 	articulos_a_permutar_con_estante(ProductosAPermutarCategoria,EstantesEncontradosCategoria,ArticulosConEstantes),
-	%write(ArticulosConEstantes),
 	separar_productos_a_permutar(ArticulosConEstantes,EstantesNoObservados,ProductosColocarCorrectos,ProductosColocarIncorrectos),
-	%write(ProductosColocarCorrectos),nl,
-	%write(ProductosColocarIncorrectos),nl,
 	substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrectos,EstantesNoObservados,ListaFinalDistribucion,ArticulosConEstantes,TodasLasConfiguraciones),
-	%write("Todas las configuraciones son"),nl,
-	%write(TodasLasConfiguraciones),nl,
 	calcular_peso_configuraciones(TodasLasConfiguraciones,LConfiguracion,LPesoConfig),
-	%write("Las listas son las siguintes "),nl,
-	%write(LConfiguracion),nl,
-	%write(LPesoConfig),
 	funcion_min(LConfiguracion,LPesoConfig,1000,Configuracion,RConfiguracion),
-	%write("El Diagnostico es el siguiente"),nl,
 	decripcion_acciones_asistente(RConfiguracion,1)
 	.
 	
@@ -709,7 +568,6 @@ llenado_ceros([Posible|Resto],CantidadEstantNObservado,[PosiblesAct|PosibleResto
 calcular_permutaciones_delistas([],[]).
 calcular_permutaciones_delistas([PConfiguracion|RConfiguracion],[LConfiguraciones|Resto]):-
 	setof(NConfiguraciones,perm(PConfiguracion,NConfiguraciones),LConfiguraciones),
-	%write(LConfiguraciones),nl,
 	calcular_permutaciones_delistas(RConfiguracion,Resto)
 	.
 
@@ -719,7 +577,6 @@ without_last([X|Xs], [X|WithoutLast]) :-
 
 vaciar_listas_alista([],_).
 vaciar_listas_alista([H|T],Lista):-
-	%write(H),nl,nl,
 	union(H,Lista,Lista2),
 	vaciar_listas_alista(T,Lista2)
 	.
@@ -730,10 +587,7 @@ distribucion_por_estante(ArticulosAPermutar,EstantesNoObservados,ListaFinal):-
 	add_up_list(CantidadArtPermutar,PosiblesDistribuciones),
 	posibles_distribuciones(PosiblesDistribuciones,CantidadEstantNObservado,R),
 	llenado_ceros(R,CantidadEstantNObservado,ConfiguracionesProductos),
-	%write(ConfiguracionesProductos),nl,
 	calcular_permutaciones_delistas(ConfiguracionesProductos,R2),
-	%write("Las nuevas configuraciones son:"),nl,
-	%write(R2),nl,nl,nl,
 	vaciar_listas_alista(R2,ListaFinal),
 	without_last(ListaFinal,ListaFinalDist)
 	.	
