@@ -559,37 +559,124 @@ substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrec
 	%write(ConfiguracionEstantesFinal),nl,
 	substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrectos,EstantesNoObservados,RPosibleDistribucion,ArticulosConEstantes,R).
 
+obetener_creencias_cantidad_estante_auxiliar([],[]).
+obetener_creencias_cantidad_estante_auxiliar([Estante=>ListaProductos|REstantes],[Tlista|RTlista]):-
+	length(ListaProductos,Tlista),
+	obetener_creencias_cantidad_estante_auxiliar(REstantes,RTlista)
+	.
 
+obetener_creencias_cantidad_estante(TamanioCreenciasPorEstante):-
+	unificar_kb(KB),
+	encontrar_creencias(KB,Creencias),
+	obetener_creencias_cantidad_estante_auxiliar(Creencias,TamanioCreenciasPorEstante)
+	.
 
+obtener_cantidad_estante_pconfiguracion([],[]).
+obtener_cantidad_estante_pconfiguracion([Estante|REstante],[TEstante|RTEstante]):-
+	length(Estante,TEstante),
+	obtener_cantidad_estante_pconfiguracion(REstante,RTEstante)
+	.
+obtener_diferencies_creencias_pconfigruacion([],[],[]).
+obtener_diferencies_creencias_pconfigruacion([TamanioEstanteCreencia|REstanteCreencia],[TEstante|RTEstante],[DTamanio|RDTamanio]):-
+	DTamanio is abs(TamanioEstanteCreencia-TEstante),
+	obtener_diferencies_creencias_pconfigruacion(REstanteCreencia,RTEstante,RDTamanio).
 
+%PC/C%
+obtener_pconfiguracion_sin_creencias_aux2([],[]).
+obtener_pconfiguracion_sin_creencias_aux2([H|T],[Lproductos|RLproductos]):-
+	H=IdEstante=>Lproductos,
+	obtener_pconfiguracion_sin_creencias_aux2(T,RLproductos).
 
-arbol_deseado():-
+obtener_pconfiguracion_sin_creencias_aux(LProductosCreencias):-
+	unificar_kb(KB),
+	encontrar_creencias(KB,Creencias),
+	obtener_pconfiguracion_sin_creencias_aux2(Creencias,LProductosCreencias).	
+
+obtener_pconfiguracion_sin_creencias([],[],[]).
+obtener_pconfiguracion_sin_creencias([Estante|REstante],[EstanteCreencias|REstanteCreencias],[TEstante|RTEstante]):-
+	subtract(Estante,EstanteCreencias,RestoCreencias),
+	length(RestoCreencias,TEstante),
+	obtener_pconfiguracion_sin_creencias(REstante,REstanteCreencias,RTEstante).
+
+calcular_peso_configuraciones([],[],[]).
+calcular_peso_configuraciones([Configuracion|RestoConfiguraciones],[Configuracion|RConfiguracion],[PesoFinalConfiguracion|RPesoFinalConfiguracion]):-
+	%write("Voy a iniciar con el calculo del peos las configuraciones"),nl,
+	%write(Configuracion),nl,
+	%write("La cantidad por estantes de las creencias es el siguiente"),nl,
+	obetener_creencias_cantidad_estante(TamanioCreenciasPorEstante),
+	%write(TamanioCreenciasPorEstante),nl,
+	%write("El tamaño de la primer configuracion es el siguiente:"),nl,
+	obtener_cantidad_estante_pconfiguracion(Configuracion,TamanioCinfiguracionPorEstante),nl,
+	%write(TamanioCinfiguracionPorEstante),nl,
+	%write("La diferencia es la siguiente"),nl,
+	obtener_diferencies_creencias_pconfigruacion(TamanioCreenciasPorEstante,TamanioCinfiguracionPorEstante,DiferenciasPorEstante),nl,
+	%write(DiferenciasPorEstante),
+	%write("El valor de la suma de diferencias por estante es el siguiente"),nl,
+	sum_list(DiferenciasPorEstante,SumadiferenciasPorEstante),%Valor importante a considerar
+	%write(SumadiferenciasPorEstante),nl,
+	obtener_pconfiguracion_sin_creencias_aux(LProductosCreencias),
+	%write("obtener_pconfiguracion_sin_creencias_aux"),nl,
+	%write(LProductosCreencias),nl,
+	obtener_pconfiguracion_sin_creencias(Configuracion,LProductosCreencias,TEstante),
+	%write(TEstante),%Valor importante a considerar
+	sum_list(TEstante,SumaTEstante),
+	%write(SumaTEstante),nl,
+	%write("El valor de la funcion final es el siguiente"),nl,
+	PesoFinalConfiguracion is SumadiferenciasPorEstante+SumaTEstante,
+	calcular_peso_configuraciones(RestoConfiguraciones,RConfiguracion,RPesoFinalConfiguracion).
+
+funcion_min([],[],Min,Configuracion,R):- R=Configuracion.	
+funcion_min([H|T],[Z|W],Min,Configuracion,R):-	
+	Min>Z -> (Min2=Z, Configuracion2=H,funcion_min(T,W,Min2,Configuracion2,R));
+	funcion_min(T,W,Min,Configuracion,R).
+
+reportar_acciones_productos([]).
+reportar_acciones_productos([H|T]):-
+	write("Dejo el producto :"),write(H),nl,
+	reportar_acciones_productos(T).
+
+decripcion_acciones_asistente([],Estante).
+decripcion_acciones_asistente([H|T],Estante):-
+	H=[]->Estante2 is Estante+1,decripcion_acciones_asistente(T,Estante2);
+	write("El asistente se movio al estante"),write(" :"),write(Estante),
+	reportar_acciones_productos(H),Estante2 is Estante+1,
+	decripcion_acciones_asistente(T,Estante2).
+
+diagnostico(RConfiguracion):-
 	tamanio_porestante(Tamanioestante,Totaldeproductos),
 	numero_deproductosnoreportados(TotalNoReportados),
 	ProductosTotales is Totaldeproductos+TotalNoReportados,
 	tamanio_porestante_obs(TamanioestanteObservacion,TotaldeproductosObservacion),
 	ProductosTotalesRepartir is ProductosTotales - TotaldeproductosObservacion,
-	write(ProductosTotalesRepartir),nl,
+	%write(ProductosTotalesRepartir),nl,
 	estantes_noobservados(EstantesNoObservados),
-	write(EstantesNoObservados),nl,
+	%write(EstantesNoObservados),nl,
 	articulos_a_permutar(ArticulosAPermutar),
-	write(ArticulosAPermutar),nl,
+	%write(ArticulosAPermutar),nl,
 	distribucion_por_estante(ArticulosAPermutar,EstantesNoObservados,ListaFinalDistribucion),
-	write(ListaFinalDistribucion),nl,
+	%write(ListaFinalDistribucion),nl,
 	unificar_kb(KB),
 	encontrar_productos(KB,S),
 	asociar_producto_estante(ArticulosAPermutar,S,R,ProductosAPermutarCategoria),
-	write(ProductosAPermutarCategoria),
+	%write(ProductosAPermutarCategoria),
 	encontrar_estantes(EstantesEncontradosCategoria),
-	write(EstantesEncontradosCategoria),nl,
+	%write(EstantesEncontradosCategoria),nl,
 	articulos_a_permutar_con_estante(ProductosAPermutarCategoria,EstantesEncontradosCategoria,ArticulosConEstantes),
-	write(ArticulosConEstantes),
+	%write(ArticulosConEstantes),
 	separar_productos_a_permutar(ArticulosConEstantes,EstantesNoObservados,ProductosColocarCorrectos,ProductosColocarIncorrectos),
-	write(ProductosColocarCorrectos),nl,
-	write(ProductosColocarIncorrectos),nl,
+	%write(ProductosColocarCorrectos),nl,
+	%write(ProductosColocarIncorrectos),nl,
 	substraer_elementos_correctos(ProductosColocarCorrectos,ProductosColocarIncorrectos,EstantesNoObservados,ListaFinalDistribucion,ArticulosConEstantes,TodasLasConfiguraciones),
-	write("Todas las configuraciones son"),nl,
-	write(TodasLasConfiguraciones).
+	%write("Todas las configuraciones son"),nl,
+	%write(TodasLasConfiguraciones),nl,
+	calcular_peso_configuraciones(TodasLasConfiguraciones,LConfiguracion,LPesoConfig),
+	%write("Las listas son las siguintes "),nl,
+	%write(LConfiguracion),nl,
+	%write(LPesoConfig),
+	funcion_min(LConfiguracion,LPesoConfig,1000,Configuracion,RConfiguracion),
+	%write("El Diagnostico es el siguiente"),nl,
+	decripcion_acciones_asistente(RConfiguracion,1)
+	.
 	
 	
 	
