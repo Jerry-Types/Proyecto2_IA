@@ -1,2 +1,3 @@
 # Proyecto2_IA
-Proyecto 2 del curso de Inteligencia Artificial Fin.
+Proyecto 2 del curso de Inteligencia Artificial Final.
+
