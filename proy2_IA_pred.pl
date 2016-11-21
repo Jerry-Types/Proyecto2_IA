@@ -67,7 +67,7 @@ encontrar_creencias([H|T],R):-
 
 encontrar_estantes2([],[]).
 encontrar_estantes2([H|T],[Estante=>ValorCategoria|REstante]):-
-	H=[Id=>Estante,[Categoria=>ValorCategoria]],
+	H=[_=>Estante,[_=>ValorCategoria]],
 	encontrar_estantes2(T,REstante)
 	.
 
@@ -89,18 +89,18 @@ encontrar_estantes(EstantesConCategoria):-
 
 
 %Predicado ecnontrar categoria de producto de una lista de listas%
-encontrar_categoria_listal([],Producto,R).
+encontrar_categoria_listal([],_,_).
 encontrar_categoria_listal([H|T],Producto,R):-
-	H=[Id=>Product,Categoria=>Valor|Rp],
+	H=[_=>Product,_=>Valor|_],
 	Product=Producto -> R=Product=>Valor;
 	encontrar_categoria_listal(T,Producto,R).
 
 
 
 %Predicado ecnontrar estante de producto de una lista de listas%
-encontrar_categoria_estantel([],Producto,R).
+encontrar_categoria_estantel([],_,_).
 encontrar_categoria_estantel([H|T],Producto,R):-
-	H=[Id=>Product,Categoria=>Valor|Rp],
+	H=[_=>Product,_=>Valor|_],
 	Product=Producto -> R=Product=>Valor;
 	encontrar_categoria_estantel(T,Producto,R).
 
@@ -113,33 +113,32 @@ encontrar_productos([H|T],R):-
 	encontrar_productos(T,R)
 	.
 %Predicado lista productos con estantes%
-asociar_producto_estante([],S,R,[]).
+asociar_producto_estante([],_,_,[]).
 asociar_producto_estante([H|T],S,R,[Lp|Lps]):-
 	encontrar_categoria_estantel(S,H,R),R=Lp,
-	asociar_producto_estante(T,S,Rs,Lps).
+	asociar_producto_estante(T,S,_,Lps).
 
 
 %Predicado lista productos con categoria%
-asociar_producto_categoria([],S,R,[]).
+asociar_producto_categoria([],_,_,[]).
 asociar_producto_categoria([H|T],S,R,[Lp|Lps]):-
 	encontrar_categoria_listal(S,H,R),R=Lp,
-	asociar_producto_categoria(T,S,Rs,Lps).
+	asociar_producto_categoria(T,S,_,Lps).
 
-encontrar_match_categorias2(Excategoria,[],El,[],[]).
+encontrar_match_categorias2(_,[],_,[],[]).
 encontrar_match_categorias2(Excategoria,[Prod=>Cat|T],El,[Prod|L1],L2):-
 	Excategoria=Cat->!,encontrar_match_categorias2(Excategoria,T,El,L1,L2).
 
-encontrar_match_categorias2(Excategoria,[Prod=>Cat|T],El,L1,[Prod|L2]):-
+encontrar_match_categorias2(Excategoria,[Prod=>_|T],El,L1,[Prod|L2]):-
 	encontrar_match_categorias2(Excategoria,T,El,L1,L2).	
 
-encontrar_match_categorias(Excategoria,[Estante=>Prod],El,Elmodificado):-
+encontrar_match_categorias(Excategoria,[_=>Prod],El,Elmodificado):-
 	encontrar_match_categorias2(Excategoria,Prod,El,Lcorrectos,Lsobrantes),
 	El=[Correctos,Sobrantes,Faltantes],
 	union(Correctos,Lcorrectos,Lcorrectosmod),
 	Elmodificado=[Lcorrectosmod,Lsobrantes,Faltantes].
-	.
 
-actualizar_creencias_observaciones([],KB,[],[]).
+actualizar_creencias_observaciones([],_,[],[]).
 actualizar_creencias_observaciones([Ex=>El|Er],KB,[Ex=>Excategoria|Exr],[Ex=>Elmodificado|Elmodificador]):-
 	%encontrar_estantes(KB,T),
 	encontrar_productos(KB,S),
@@ -639,3 +638,342 @@ permutation([], []).
 permutation([X], [X]) :-!.
 permutation([T|H], X) :- permutation(H, H1), appendlist(L1, L2, H1), appendlist(L1, [T], X1), appendlist(X1, L2, X).
 
+%%%=================================Toma de Desicion======================================================%%%%
+
+encontrar_tareas_auxiliar([],R).
+encontrar_tareas_auxiliar([H|T],R):-
+	H=..Lista,
+	Lista=[class,robot,Posicion,[_,_,Tareas]]->R=Tareas,!;
+	encontrar_tareas_auxiliar(T,R).
+
+encontrar_tareas(Tareas):-
+	unificar_kb(KB),
+	encontrar_tareas_auxiliar(KB,Tareas).
+
+verificar_diagnostico([]).
+verificar_diagnostico([Estante=>LProductos|REstantes]):-
+	LProductos=[]->verificar_diagnostico(REstantes);
+	fail.
+
+
+encontrar_diagnostico_intermedio([],R).
+encontrar_diagnostico_intermedio([H|T],R):-
+	H=..Lista,
+	Lista=[class,diagnostico,EstantesDiagnostico]->R=EstantesDiagnostico,!;
+	encontrar_diagnostico_intermedio(T,R).
+
+encontrar_diagnostico(EstantesDiagnostico):-
+	unificar_kb(KB),
+	encontrar_diagnostico_intermedio(KB,EstantesDiagnostico).
+
+
+obtener_productos_a_ordenar_parcialmente_aux([],[],[]).
+obtener_productos_a_ordenar_parcialmente_aux([ProductosDiagnostico|RProductosDiagnostico],[ProductosCreencias|RProductosCreencias],[DiferenciaProductos|RDiferenciaProductos]):-
+	ProductosDiagnostico=Estante=>LProductosDiagnostico,
+	ProductosCreencias=EstantesCreencias=>LProductosCreencias,
+	%write("Las diferencias lista a lista son los siguientes"),nl,
+	%write(LProductosCreencias),write("---"),write(LProductosDiagnostico),nl,
+	%write("La diferencia es la siguiente"),nl,
+	subtract(LProductosCreencias,LProductosDiagnostico,DiferenciaProductos),
+	%write(DiferenciaProductos),nl,
+	obtener_productos_a_ordenar_parcialmente_aux(RProductosDiagnostico,RProductosCreencias,RDiferenciaProductos)
+	.
+
+obtener_productos_a_ordenar_parcialmente(EstantesDiagnostico2,DiferenciaProductosEstantePorEstante):-
+	%write("Los estantes del diagnostico son los siguientes"),nl,
+	%write(EstantesDiagnostico2),
+	unificar_kb(KB),
+	encontrar_creencias(KB,Creencias),
+	%write("Las creencias son las siguientes"),nl,
+	obtener_productos_a_ordenar_parcialmente_aux(EstantesDiagnostico2,Creencias,DiferenciaProductosEstantePorEstante).
+	%write("El valor de R es el siguiente"),nl,
+	%write(DiferenciaProductosEstantePorEstante)
+	
+
+lista_productos_a_lista_ordenar([],[]).
+lista_productos_a_lista_ordenar([H|T],[Valor|RValor]):-
+	Valor=ordenar=>H,
+	lista_productos_a_lista_ordenar(T,RValor).
+
+
+crear_lista_productos_ordenar_aux([],[]).
+crear_lista_productos_ordenar_aux([H|T],[ListaOrdenar|RListaOrdenar]):-
+	lista_productos_a_lista_ordenar(H,ListaOrdenar),
+	crear_lista_productos_ordenar_aux(T,RListaOrdenar)
+	.
+
+crear_lista_productos_ordenar(DiferenciaProductos,ListaObjetos):-
+	crear_lista_productos_ordenar_aux(DiferenciaProductos,Lista),
+	flatten(Lista,ListaObjetos).
+
+pasar_lista_a_ordenar([],[]).
+pasar_lista_a_ordenar([Actividad=>Producto|Resto],[Valor|Rvalor]):-
+	Valor=ordenar=>Producto,
+	pasar_lista_a_ordenar(Resto,Rvalor)
+	.
+
+
+lista_tareas_unicas(ListaObjetos,LTareas,LTareasFinal):-
+	pasar_lista_a_ordenar(LTareas,LTareasModificada),
+	write("Las tareas modificadas son:"),nl,
+	%write(LTareasModificada),nl,
+	%write(LTareas),nl,
+	subtract(ListaObjetos,LTareasModificada,LTareasFinal)
+	.
+
+
+separar_tareas([],[],[]).
+separar_tareas([Actividad=>Producto|Resto],[Prod|L1],L2):-
+	Actividad=llevar->Prod=Actividad=>Producto,!,separar_tareas(Resto,L1,L2).
+
+separar_tareas([Actividad=>Producto|Resto],L1,[Prod|L2]):-
+	Prod=Actividad=>Producto,
+	separar_tareas(Resto,L1,L2).
+
+extraer_llevar([],Contador,[]).
+extraer_llevar(_,0,[]).
+extraer_llevar([Actividad=>Producto|RActividad],Contador,[TareasLLevar|Resto]):-
+	TareasLLevar=Actividad=>Producto,
+	Contador2 is Contador-1,
+	extraer_llevar(RActividad,Contador2,Resto)
+	.
+
+obtener_produtos_llevar([],[]).
+obtener_produtos_llevar([Actividad=>Producto|Resto],[Producto|RProducto]):-
+	obtener_produtos_llevar(Resto,RProducto).
+
+obtener_estantes_llevar([],[]).
+obtener_estantes_llevar([Producto=>Estante|Resto],[Estante|RestoEstantes]):-
+	obtener_estantes_llevar(Resto,RestoEstantes).
+
+
+
+obtener_posicion_inicial_auxiliar([],R).
+obtener_posicion_inicial_auxiliar([H|T],R):-
+	H=..Lista,
+	Lista=[class,robot,PosicionInicial=>Lugar,[_,_,Tareas]]->R=Lugar,!;
+	obtener_posicion_inicial_auxiliar(T,R).
+
+obtener_posicion_inicial(PosicionInicial):-
+	unificar_kb(KB),
+	obtener_posicion_inicial_auxiliar(KB,PosicionInicial).
+
+armar_ruta(EstantesProductosLlevar,Ruta,Ruta2):-
+	obtener_posicion_inicial(PosicionInicial),
+	append([PosicionInicial],EstantesProductosLlevar,ParteRuta),
+	append(ParteRuta,[mostrador],RutaFinal),
+	reverse(EstantesProductosLlevar,EstantesProductosLlevarReverso),
+	append([PosicionInicial],EstantesProductosLlevarReverso,ParteRuta2),
+	append(ParteRuta2,[mostrador],RutaFinal2),
+	Ruta=RutaFinal,
+	Ruta2=RutaFinal2
+	.
+pasar_lugar_a_indice(Valor,Indice):-
+	Valor=mostrador->Indice is 1;
+	remove_char(Valor,e,IndiceString),
+	 atom_number(IndiceString, IndiceParcial),
+	 Indice is IndiceParcial+1
+	 .
+obtener_distancias_de_lugar_auxiliar2([],Lugar,DistanciaEncontrada).
+obtener_distancias_de_lugar_auxiliar2([[Identificador=>Valor,Distancias]|Resto],Lugar,DistanciaEncontrada):-
+	%write(Distancias),nl,
+	Valor=Lugar->DistanciaEncontrada=Distancias;
+	obtener_distancias_de_lugar_auxiliar2(Resto,Lugar,DistanciaEncontrada).
+
+
+obtener_distancias_de_lugar_auxiliar([H|T],Lugar,DistanciaEncontrada):-
+	H=..Lista,
+	Lista=[class,pesos,Lugares]->obtener_distancias_de_lugar_auxiliar2(Lugares,Lugar,DistanciaEncontrada),!;
+	obtener_distancias_de_lugar_auxiliar(T,Lugar,DistanciaEncontrada).
+
+%obtener_distancias_de_lugar(mostrador,DistanciaEncontrada)
+obtener_distancias_de_lugar(Lugar,DistanciaEncontrada):-
+	unificar_kb(KB),
+	obtener_distancias_de_lugar_auxiliar(KB,Lugar,DistanciaEncontrada).
+
+
+funcion_peso_ruta([X],Peso,Pesofinal):-Pesofinal = Peso.
+funcion_peso_ruta([X,Y|Resto],Peso,Pesofinal):-
+	obtener_distancias_de_lugar(X,DistanciaEncontrada),
+	%write(DistanciaEncontrada),nl,
+	pasar_lugar_a_indice(Y,Indice),
+	nth1(Indice,DistanciaEncontrada,Distancia),
+	%write(Distancia),nl,
+	Peso2 is Peso+Distancia,
+	%write(Peso2),nl,
+	funcion_peso_ruta([Y|Resto],Peso2,Pesofinal).
+
+obtener_ruta_menor(R1PesoFinal,R2PesoFinal,Ruta1,Ruta2,RutaFinal):-
+	R1PesoFinal =< R2PesoFinal -> RutaFinal=Ruta1;
+	RutaFinal=Ruta2.
+
+
+valor_mano_derecha(EstadoD,Valor):-
+	EstadoD=libre ->Valor is 1;
+	Valor is 0.
+
+valor_mano_izquierda(EstadoI,Valor):-
+	EstadoI=libre ->Valor is 1;
+	Valor is 0.
+
+cantidad_brazos_libres(EstadoD,EstadoI,ManosLibres):-
+	valor_mano_derecha(EstadoD,ValorD),
+	valor_mano_izquierda(EstadoI,ValorI),
+	ManosLibres is ValorD+ValorI,
+	write(ManosLibres)
+	.
+
+encontrar_brazos_libres_auxiliar([],ManosLibres).
+encontrar_brazos_libres_auxiliar([H|T],ManosLibres):-
+	H=..Lista,
+	Lista=[class,robot,Posicion,[ManoDerecha=>EstadoD,ManoIzquierda=>EstadoI,Tareas]]->cantidad_brazos_libres(EstadoD,EstadoI,ManosLibres),!;
+	encontrar_brazos_libres_auxiliar(T,ManosLibres).
+
+encontrar_brazos_libres(ManosLibres):-
+	unificar_kb(KB),
+	encontrar_brazos_libres_auxiliar(KB,ManosLibres).
+
+acualizar_ruta([X,Y|Resto],RutaFinalActualizada):-
+	X=Y -> RutaFinalActualizada=[Y|Resto];
+	RutaFinalActualizada=[X,Y|Resto].
+
+funcion_diferencias([],[],[]).
+funcion_diferencias([EstanteCreencias=>ProductosCreencias|T],[EstanteDiagnostico=>ProductosDiagnostico|W],[EstanteCreencias=>ProductosMalAcomodados|Resto]):-
+	subtract(ProductosDiagnostico,ProductosCreencias,ProductosMalAcomodados),
+	funcion_diferencias(T,W,Resto).
+
+recobrar_estantes_mal_acomodados([],[]).
+recobrar_estantes_mal_acomodados([Estante=>Lista|Resto],[Estante=>ProductosLLevarConEstantes|Restol]):-
+	unificar_kb(KB),
+	encontrar_productos(KB,S),
+	asociar_producto_estante(Lista,S,R,ProductosLLevar),
+	encontrar_estantes(EstantesEncontradosCategoria),
+	articulos_a_permutar_con_estante(ProductosLLevar,EstantesEncontradosCategoria,ProductosLLevarConEstantes),
+	recobrar_estantes_mal_acomodados(Resto,Restol).
+
+objetos_a_reacomodar_por_estante(ListaObjetosReacomodarPorEstante):-
+	encontrar_diagnostico(EstantesDiagnostico),
+	unificar_kb(KB),
+	encontrar_creencias(KB,Creencias),
+	funcion_diferencias(Creencias,EstantesDiagnostico,EstantesObjetosMalAcomodados),
+	recobrar_estantes_mal_acomodados(EstantesObjetosMalAcomodados,ListaObjetosReacomodarPorEstante)
+	.
+
+
+encontrar_productos_estante_final(RProductos,IdEstanteFin,RValor):- a_encontrar_productos_estante_final(RProductos,IdEstanteFin,RValor,[]).
+a_encontrar_productos_estante_final([],IdEstanteFin,A,A):-!.
+a_encontrar_productos_estante_final([Producto=>IdEstante|RProductos],IdEstanteFin,RValor,A):-
+	IdEstante=IdEstanteFin->a_encontrar_productos_estante_final(RProductos,IdEstanteFin,RValor,[Producto|A]);
+	a_encontrar_productos_estante_final(RProductos,IdEstanteFin,RValor,A).
+
+objetos_por_reacomodar_entre_estantes([],IdEstanteInicio,IdEstanteFin,ArticulosSeleccionados).
+objetos_por_reacomodar_entre_estantes([IdEstante=>ProductosAcomodar|REstantes],IdEstanteInicio,IdEstanteFin,ArticulosSeleccionados):-
+	IdEstante=IdEstanteInicio-> encontrar_productos_estante_final(ProductosAcomodar,IdEstanteFin,ArticulosSeleccionados);
+	objetos_por_reacomodar_entre_estantes(REstantes,IdEstanteInicio,IdEstanteFin,ArticulosSeleccionados).
+
+
+desicion_four(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal):-
+	RutaFinalActualizada=[P1,P2,P3,P4],
+	write(ListaObjetosReacomodarPorEstante),
+	obtener_importancia_cliente(ImportanciaCliente),
+	ElementosTomar is abs(ImportanciaCliente-2),
+	objetos_por_reacomodar_entre_estantes(ListaObjetosReacomodarPorEstante,P1,P2,ArticulosSeleccionadoP1P2),
+	objetos_por_reacomodar_entre_estantes(ListaObjetosReacomodarPorEstante,P1,P3,ArticulosSeleccionadoP1P3Parcial),
+	length(ArticulosSeleccionadoP1P3Parcial,TamanioP1P3),
+	(TamanioP1P3=0->take(0,[],ArticulosSeleccionadoP1P3);
+		take(1,ArticulosSeleccionadoP1P3Parcial,ArticulosSeleccionadoP1P3)),
+	union(ArticulosSeleccionadoP1P2,ArticulosSeleccionadoP1P3,ArticulosAcomodar),
+	take(ElementosTomar,ArticulosAcomodar,ArticulosAcomodarPrevio),
+	objetos_por_reacomodar_entre_estantes(ListaObjetosReacomodarPorEstante,P2,P3,ArticulosSeleccionadoParcialP2P3),
+	take(1,ArticulosSeleccionadoParcialP2P3,ArticulosSeleccionadoP2P3Pendiente),
+	take(ElementosTomar,ArticulosSeleccionadoP2P3Pendiente,ArticulosSeleccionadoP2P3),
+	union(ArticulosAcomodarPrevio,ArticulosSeleccionadoP2P3,ArticulosAcomodarFinal).
+
+
+desicion_three(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal):-
+	RutaFinalActualizada=[P1,P2,P3],
+	obtener_importancia_cliente(ImportanciaCliente),
+	ElementosTomar is abs(ImportanciaCliente-2),
+	objetos_por_reacomodar_entre_estantes(ListaObjetosReacomodarPorEstante,P1,P2,ArticulosSeleccionadoParcialP1P2),
+	take(1,ArticulosSeleccionadoParcialP1P2,ArticulosSeleccionadoP1P2Pendiente),
+	take(ElementosTomar,ArticulosSeleccionadoP1P2Pendiente,ArticulosAcomodarFinal).
+
+desicion_dos(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal):-
+	ArticulosAcomodarFinal=[].
+
+
+objetos_a_reacomodar_en_ruta(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal):-
+	length(RutaFinalActualizada,TamanioRuta),
+	(TamanioRuta=4->desicion_four(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal);
+	 TamanioRuta=3->desicion_three(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal);
+	 TamanioRuta=2->desicion_dos(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal)).
+
+obtener_importancia_cliente_aux([],R).
+obtener_importancia_cliente_aux([H|T],R):-
+	H=..Lista,
+	Lista=[class,cliente,Importancia=>Valor]->R=Valor,!;
+	obtener_importancia_cliente_aux(T,R).
+
+obtener_importancia_cliente(ImportanciaCliente):-
+	unificar_kb(KB),
+	obtener_importancia_cliente_aux(KB,ImportanciaCliente).
+
+desicion():-
+	encontrar_tareas(Tareas),	
+	Tareas=Actividad=>LTareas,
+	encontrar_diagnostico(EstantesDiagnostico),
+	length(LTareas,TamanioTareas),
+	(verificar_diagnostico(EstantesDiagnostico),TamanioTareas=<2 )-> (write("La Desicion es la siguiente :"),write(LTareas));
+	encontrar_diagnostico(EstantesDiagnostico2),
+	encontrar_tareas(Tareas),	
+	Tareas=Actividad=>LTareas,
+	obtener_productos_a_ordenar_parcialmente(EstantesDiagnostico2,DiferenciaProductos),
+	crear_lista_productos_ordenar(DiferenciaProductos,ListaObjetos),
+	lista_tareas_unicas(ListaObjetos,LTareas,LTareasFinal),
+	write("Las tareas unicas son"),nl,
+	union(LTareas,LTareasFinal,ListaTareasPorHacer),
+	write(ListaTareasPorHacer),nl,
+	separar_tareas(ListaTareasPorHacer,TareasLLevar,TareasOrdenar),
+	write(TareasLLevar),nl,
+	write(TareasOrdenar),nl,
+	extraer_llevar(TareasLLevar,2,TareasALoMas),
+	write(TareasALoMas),nl,
+	unificar_kb(KB),
+	encontrar_productos(KB,S),
+	obtener_produtos_llevar(TareasALoMas,TareasALoMasSoloProductos),
+	asociar_producto_estante(TareasALoMasSoloProductos,S,R,ProductosLLevar),
+	encontrar_estantes(EstantesEncontradosCategoria),
+	articulos_a_permutar_con_estante(ProductosLLevar,EstantesEncontradosCategoria,ProductosLLevarConEstantes),
+	write(ProductosLLevarConEstantes),nl,
+	obtener_estantes_llevar(ProductosLLevarConEstantes,EstantesProductosLlevar),
+	write(EstantesProductosLlevar),
+	armar_ruta(EstantesProductosLlevar,R1,R2),
+	write(R1),nl,
+	write(R2),nl,
+	funcion_peso_ruta(R1,0,R1PesoFinal),
+	funcion_peso_ruta(R2,0,R2PesoFinal),
+	obtener_ruta_menor(R1PesoFinal,R2PesoFinal,R1,R2,RutaFinal),	
+	write("La ruta que usaremos es la siguiente"),nl,
+	write(RutaFinal),
+	acualizar_ruta(RutaFinal,RutaFinalActualizada),
+	write("Ruta Actualizada"),nl,
+	write(RutaFinalActualizada),nl,
+	objetos_a_reacomodar_por_estante(ListaObjetosReacomodarPorEstante),
+	write("Los objetos a reacomodar por estante son los siguientes"),nl,
+	write(ListaObjetosReacomodarPorEstante),nl,
+	objetos_a_reacomodar_en_ruta(ListaObjetosReacomodarPorEstante,RutaFinalActualizada,ArticulosAcomodarFinal),
+	write("Articulos a Acomodar con IMPORTANCIA"),nl,
+	write(ArticulosAcomodarFinal)
+	.
+	
+	
+
+
+remove_char(S,C,X) :- atom_concat(L,R,S), atom_concat(C,W,R), atom_concat(L,W,X).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Planeacion%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%planeacion():-
+	%encontrar_brazos_libres(ManosLibres),nl,
+	%write("La cantidad de manos libres es la siguiente"),nl,
+	%write(ManosLibres)
