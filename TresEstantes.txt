@@ -1,0 +1,12 @@
+[
+class(top,[],[]),
+class(estantes,[[id=>e1,[categoria=>bebida]],[id=>e2,[categoria=>comida]],[id=>e3,[categoria=>pan]],[id=>e4,[categoria=>postres]]]),
+class(productos,[ubicacion=>almacen],[[id=>helado, categoria=>postres],[id=>flan, categoria=>postres],[id=>rollo, categoria=>pan],[id=>fideos, categoria=>comida],[id=>kellogs, categoria=>comida],[id=>frutsi,categoria=>bebida],[id=>cerveza,categoria=>bebida ],[id=>coca, categoria=>bebida],[id=>maruchan, categoria=>comida],[id=>gansito, categoria=>pan],[id=>pastel, categoria=>postres]]),
+class(creencias,[e1=>[cerveza,coca],e2=>[maruchan,kellogs,fideos],e3=>[gansito,rollo],e4=>[helado,flan,pastel]]),
+class(robot,posicion_inicial=>mostrador,[mano_derecha=>libre, mano_izquierda=>cerveza, tareas=>[llevar=>cerveza,llevar=>rollo]]),
+class(observacion,[e1=>[cerveza,coca,kellogs],e2=>[],e3=>[],e4=>[]]),
+class(diagnostico,[e1=>[cerveza,flan,maruchan,fideos],e2=>[gansito,helado],e3=>[kellogs,rollo,coca,pastel],e4=>[]]),
+class(pesos,[[id=>mostrador,[0,1,2,3,5]],[id=>e1,[2,0,5,6,7]],[id=>e2,[1,2,0,3,4]],[id=>e3,[1,2,4,0,4]],[id=>e4,[1,2,5,3,0]]]),
+class(distancias,[[id=>mostrador,[0,2,2,2,2]],[id=>e1,[2,0,1,2,1]],[id=>e2,[2,2,0,2,1]],[id=>e3,[2,1,1,0,2]],[id=>e4,[2,2,2,2,0]]]),
+class(cliente,importancia=>0)
+]
